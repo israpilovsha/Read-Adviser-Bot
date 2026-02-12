@@ -4,27 +4,35 @@ import (
 	"flag"
 	"log"
 
-	"github.com/israpilovsha/Read-Adviser-Bot/clients/telegram"
+	tgClient "github.com/israpilovsha/Read-Adviser-Bot/clients/telegram"
+	eventconsumer "github.com/israpilovsha/Read-Adviser-Bot/consumer/event-consumer"
+	"github.com/israpilovsha/Read-Adviser-Bot/events/telegram"
+	"github.com/israpilovsha/Read-Adviser-Bot/storage/files"
 )
 
 const (
-	tgBotHost = "api.telegram.org"
+	tgBotHost   = "api.telegram.org"
+	storagePath = "storage"
+	batchSize   = 100
 )
 
 func main() {
-	// token = flags.Get(token)
-	tgClient := telegram.New(tgBotHost, MustToken())
+	eventsProcessor := telegram.New(
+		tgClient.New(tgBotHost, mustToken()),
+		files.New(storagePath),
+	)
 
-	// tgClient = telegram.New(token)
-
-	// fetcher = fetcher.New()
-
-	// processor = processor.New()
+	log.Print("service started")
 
 	// consumer.Start(fetcher, processor)
+	consumer := eventconsumer.New(eventsProcessor, eventsProcessor, batchSize)
+
+	if err := consumer.Start(); err != nil {
+		log.Fatal("sevice is stoped", err)
+	}
 }
 
-func MustToken() string {
+func mustToken() string {
 	token := flag.String(
 		"token-bot-token",
 		"",

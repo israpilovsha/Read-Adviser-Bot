@@ -22,8 +22,8 @@ const (
 	sentMessageMethod = "sendMessage"
 )
 
-func New(host string, token string) Client {
-	return Client{
+func New(host string, token string) *Client {
+	return &Client{
 		host:     host,
 		basePath: newBasePath(token),
 		client:   http.Client{},
@@ -41,7 +41,7 @@ func (c *Client) Updates(offset int, limit int) (updates []Update, err error) {
 	q.Add("offset", strconv.Itoa(offset))
 	q.Add("limit", strconv.Itoa(limit))
 
-	data, err := c.doRequset(getUpdateMethod, q)
+	data, err := c.doRequest(getUpdateMethod, q)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c *Client) SendMessage(chatID int, text string) error {
 	q.Add("chat_id", strconv.Itoa(chatID))
 	q.Add("text", text)
 
-	_, err := c.doRequset(sentMessageMethod, q)
+	_, err := c.doRequest(sentMessageMethod, q)
 	if err != nil {
 		return e.Wrap("can't send message", err)
 	}
@@ -68,7 +68,7 @@ func (c *Client) SendMessage(chatID int, text string) error {
 	return nil
 }
 
-func (c *Client) doRequset(method string, query url.Values) (data []byte, err error) {
+func (c *Client) doRequest(method string, query url.Values) (data []byte, err error) {
 	defer func() { err = e.WrapIfErr("can't do request", err) }()
 	u := url.URL{
 		Scheme: "https",
